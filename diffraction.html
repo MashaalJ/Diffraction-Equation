@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Diffraction Table Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f7f8;
+      color: #333;
+      padding: 40px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #1a73e8;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #155ab6;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+      font-size: 16px;
+    }
+    th {
+      background: #1a73e8;
+      color: #fff;
+      font-weight: 600;
+    }
+    td:last-child {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Diffraction Equation Table</h1>
+
+<div class="input-group">
+  <label>d (meters) - leave blank to calculate</label>
+  <input type="number" id="d" step="any" placeholder="e.g. 0.0001">
+</div>
+<div class="input-group">
+  <label>θ (degrees) - leave blank to calculate</label>
+  <input type="number" id="theta" step="any" placeholder="e.g. 30">
+</div>
+<div class="input-group">
+  <label>λ (meters) - leave blank to calculate</label>
+  <input type="number" id="lambda" step="any" placeholder="e.g. 0.0000005">
+</div>
+<div class="input-group">
+  <label>Max n</label>
+  <input type="number" id="nMax" value="5">
+</div>
+
+<button onclick="generateTable()">Generate Table</button>
+
+<table id="resultTable">
+  <thead>
+    <tr>
+      <th>n</th>
+      <th>d · sin(θ)</th>
+      <th>n · λ</th>
+      <th>d (m)</th>
+      <th>θ (°)</th>
+      <th>λ (m)</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+function generateTable() {
+  const dInput = document.getElementById("d").value;
+  const thetaInput = document.getElementById("theta").value;
+  const lambdaInput = document.getElementById("lambda").value;
+  const nMax = parseInt(document.getElementById("nMax").value);
+
+  const tbody = document.querySelector("#resultTable tbody");
+  tbody.innerHTML = "";
+
+  for (let n = 1; n <= nMax; n++) {
+    let d, theta, lambda;
+    
+    if(dInput && thetaInput && lambdaInput) {
+      d = parseFloat(dInput);
+      theta = parseFloat(thetaInput);
+      lambda = parseFloat(lambdaInput);
+    } else if (!dInput) {
+      theta = parseFloat(thetaInput);
+      lambda = parseFloat(lambdaInput);
+      d = (n * lambda) / Math.sin(theta * Math.PI/180);
+    } else if (!thetaInput) {
+      d = parseFloat(dInput);
+      lambda = parseFloat(lambdaInput);
+      let val = (n * lambda) / d;
+      theta = (val <= 1 && val >= -1) ? Math.asin(val) * 180 / Math.PI : NaN;
+    } else if (!lambdaInput) {
+      d = parseFloat(dInput);
+      theta = parseFloat(thetaInput);
+      lambda = (d * Math.sin(theta * Math.PI/180)) / n;
+    }
+
+    const leftSide = d * Math.sin(theta * Math.PI/180);
+    const rightSide = n * lambda;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${n}</td>
+      <td>${leftSide.toExponential(4)}</td>
+      <td>${rightSide.toExponential(4)}</td>
+      <td>${d.toExponential(4)}</td>
+      <td>${isNaN(theta) ? 'NaN' : theta.toFixed(2)}</td>
+      <td>${lambda.toExponential(4)}</td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+</script>
+
+</body>
+</html>
